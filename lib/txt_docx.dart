@@ -1,5 +1,3 @@
 library;
 
-class Awesome {
-  bool get isAwesome => true;
-}
+export 'src/docx_decoder.dart';
