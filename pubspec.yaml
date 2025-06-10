@@ -2,15 +2,20 @@ name: txt_docx
 description: A simple tool that could convert plain text files to docx files and vice versa
 
 version: 1.0.0
-repository: https://github.com/lindeer/txt-docx
+repository: https://gitlab.com/lindeer/txt-docx
 
 environment:
   sdk: ^3.0.0
 
+executables:
+  docx2txt:
+  txt2docx:
+
 dependencies:
+  path: ^1.8.0
   xml: ^6.5.0
   archive: ^4.0.7
 
 dev_dependencies:
-  lints: ^4.0.0
-  test: ^1.24.0
+  lints: ^5.0.0
+  test: ^1.26.2
