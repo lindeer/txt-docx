@@ -7,8 +7,9 @@ import 'package:xml/xml_events.dart' as xml;
 
 final class DocxDecoder extends StreamTransformerBase<List<int>, String> {
   final int _length;
+  final bool verbose;
 
-  const DocxDecoder(this._length);
+  const DocxDecoder(this._length, {this.verbose = false});
 
   @override
   Stream<String> bind(Stream<List<int>> stream) async* {
@@ -17,10 +18,10 @@ final class DocxDecoder extends StreamTransformerBase<List<int>, String> {
     final t1 = DateTime.now().millisecondsSinceEpoch;
     final fs = await ar.InputFileStream.asRamFile(ss, _length);
     final t2 = DateTime.now().millisecondsSinceEpoch;
-    print('docx_reader: stream asRamFile [$_length], ${t2 - t1} ms.');
+    _log('docx_reader: stream asRamFile [$_length], ${t2 - t1} ms.');
     final archive = zip.decodeStream(fs);
     final t3 = DateTime.now().millisecondsSinceEpoch;
-    print('docx_reader: zip decodeStream, ${t3 - t2} ms.');
+    _log('docx_reader: zip decodeStream, ${t3 - t2} ms.');
     final files = archive.where((f) {
       return f.isFile && f.name == 'word/document.xml';
     });
@@ -36,7 +37,7 @@ final class DocxDecoder extends StreamTransformerBase<List<int>, String> {
           .expand((events) => events);
 
       final t4 = DateTime.now().millisecondsSinceEpoch;
-      print('docx_reader: stream transformed, ${t4 - t3} ms.');
+      _log('docx_reader: stream transformed, ${t4 - t3} ms.');
       var save = false;
       await for (final e in events) {
         if (e is xml.XmlStartElementEvent) {
@@ -59,7 +60,13 @@ final class DocxDecoder extends StreamTransformerBase<List<int>, String> {
         }
       }
       final t5 = DateTime.now().millisecondsSinceEpoch;
-      print('docx_reader: handle events done, ${t5 - t4} ms.');
+      _log('docx_reader: handle events done, ${t5 - t4} ms.');
+    }
+  }
+
+  void _log(String msg) {
+    if (verbose) {
+      print('\x1B[32m$msg\x1B[0m');
     }
   }
 
