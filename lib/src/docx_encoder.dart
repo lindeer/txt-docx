@@ -4,7 +4,6 @@ import 'dart:typed_data' show Uint8List;
 
 import 'package:async/async.dart' show ChunkedStreamReader;
 import 'package:archive/archive.dart';
-import 'package:xml/xml.dart' as xml;
 
 extension _ArchiveExt on Archive {
 
@@ -15,118 +14,59 @@ extension _ArchiveExt on Archive {
   ));
 }
 
-String _createContentTypesXml() {
-  final builder = xml.XmlBuilder();
-  builder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-  builder.element('Types', nest: () {
-    builder.attribute('xmlns', 'http://schemas.openxmlformats.org/package/2006/content-types');
-    builder.element('Default', nest: () {
-      builder.attribute('Extension', 'rels');
-      builder.attribute('ContentType', 'application/vnd.openxmlformats-package.relationships+xml');
-    });
-    builder.element('Default', nest: () {
-      builder.attribute('Extension', 'xml');
-      builder.attribute('ContentType', 'application/xml');
-    });
-    builder.element('Override', nest: () {
-      builder.attribute('PartName', '/word/document.xml');
-      builder.attribute('ContentType', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml');
-    });
-    builder.element('Override', nest: () {
-      builder.attribute('PartName', '/word/styles.xml');
-      builder.attribute('ContentType', 'application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml');
-    });
-    builder.element('Override', nest: () {
-      builder.attribute('PartName', '/word/fontTable.xml');
-      builder.attribute('ContentType', 'application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml');
-    });
-  });
-  return builder.buildDocument().toXmlString();
-}
 
-String _createRelsXml() {
-  final builder = xml.XmlBuilder();
-  builder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-  builder.element('Relationships', nest: () {
-    builder.attribute('xmlns', 'http://schemas.openxmlformats.org/package/2006/relationships');
-    builder.element('Relationship', nest: () {
-      builder.attribute('Id', 'rId1');
-      builder.attribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument');
-      builder.attribute('Target', 'word/document.xml');
-    });
-  });
-  return builder.buildDocument().toXmlString();
-}
+const _contentTypeXml = """
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+  <Override PartName="/word/fontTable.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"/>
+</Types>
+""";
 
-String _createDocumentRelsXml() {
-  final builder = xml.XmlBuilder();
-  builder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-  builder.element('Relationships', nest: () {
-    builder.attribute('xmlns', 'http://schemas.openxmlformats.org/package/2006/relationships');
-    builder.element('Relationship', nest: () {
-      builder.attribute('Id', 'rId1');
-      builder.attribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles');
-      builder.attribute('Target', 'styles.xml');
-    });
-    builder.element('Relationship', nest: () {
-      builder.attribute('Id', 'rId2');
-      builder.attribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable');
-      builder.attribute('Target', 'fontTable.xml');
-    });
-  });
-  return builder.buildDocument().toXmlString();
-}
+const _relsXml = """
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>
+""";
 
-String _createStylesXml() {
-  final builder = xml.XmlBuilder();
-  builder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-  builder.element('w:styles', nest: () {
-    builder.attribute('xmlns:w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
-    builder.element('w:docDefaults', nest: () {
-      builder.element('w:rPrDefault', nest: () {
-        builder.element('w:rPr', nest: () {
-          builder.element('w:rFonts', nest: () {
-            builder.attribute('w:ascii', 'Calibri');
-            builder.attribute('w:hAnsi', 'Calibri');
-          });
-          builder.element('w:sz', nest: () {
-            builder.attribute('w:val', '22'); // Font size in half-points (11pt * 2)
-          });
-        });
-      });
-      builder.element('w:pPrDefault');
-    });
-  });
-  return builder.buildDocument().toXmlString();
-}
+const _documentRelsXml = """
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable" Target="fontTable.xml"/>
+</Relationships>
+""";
 
-String _createFontTableXml() {
-  final builder = xml.XmlBuilder();
-  builder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-  builder.element('w:fonts', nest: () {
-    builder.attribute('xmlns:w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
-    builder.element('w:font', nest: () {
-      builder.attribute('w:name', 'Calibri');
-      builder.element('w:family', nest: () {
-        builder.attribute('w:val', 'swiss');
-      });
-      builder.element('w:charset', nest: () {
-        builder.attribute('w:val', '0');
-      });
-      builder.element('w:pitch', nest: () {
-        builder.attribute('w:val', 'variable');
-      });
-      builder.element('w:sig', nest: () {
-        builder.attribute('post', '0');
-        builder.attribute('usb0', '16777216');
-        builder.attribute('usb1', '268435456');
-        builder.attribute('usb2', '0');
-        builder.attribute('usb3', '0');
-      });
-    });
-  });
-  return builder.buildDocument().toXmlString();
-}
+const _stylesXml = """
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults>
+    <w:rPrDefault>
+      <w:rPr>
+        <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>
+        <w:sz w:val="22"/>
+      </w:rPr>
+    </w:rPrDefault>
+    <w:pPrDefault/>
+  </w:docDefaults>
+</w:styles>
+""";
+
+const _fontTableXml = """
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:fonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:font w:name="Calibri">
+    <w:family w:val="swiss"/>
+    <w:charset w:val="0"/>
+    <w:pitch w:val="variable"/>
+    <w:sig post="0" usb0="16777216" usb1="268435456" usb2="0" usb3="0"/>
+  </w:font>
+</w:fonts>
+""";
 
 final class DocxEncoder extends StreamTransformerBase<String, List<int>> {
   final int _length;
@@ -136,11 +76,11 @@ final class DocxEncoder extends StreamTransformerBase<String, List<int>> {
   @override
   Stream<List<int>> bind(Stream<String> stream) {
     final archive = Archive();
-    archive.addStringFile('[Content_Types].xml', _createContentTypesXml());
-    archive.addStringFile('_rels/.rels', _createRelsXml());
-    archive.addStringFile('word/_rels/document.xml.rels', _createDocumentRelsXml());
-    archive.addStringFile('word/styles.xml', _createStylesXml());
-    archive.addStringFile('word/fontTable.xml', _createFontTableXml());
+    archive.addStringFile('[Content_Types].xml', _contentTypeXml);
+    archive.addStringFile('_rels/.rels', _relsXml);
+    archive.addStringFile('word/_rels/document.xml.rels', _documentRelsXml);
+    archive.addStringFile('word/styles.xml', _stylesXml);
+    archive.addStringFile('word/fontTable.xml', _fontTableXml);
 
     final lines = stream.transform(LineSplitter());
     final xml = _docStream(lines);
