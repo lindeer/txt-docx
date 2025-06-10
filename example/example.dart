@@ -7,17 +7,16 @@ import 'package:txt_docx/txt_docx.dart';
 void main(List<String> argv) async {
   for (final f in argv) {
     final docx = '${p.basenameWithoutExtension(f)}.docx';
-    final wf = File(docx);
 
     final file = File(f);
-    await file.openRead()
-        .transform(utf8.decoder)
-        .transform(DocxEncoder(file.lengthSync()))
-        .pipe(wf.openWrite());
+    final writer = DocxWriter();
+    await writer.writeStream(file.openRead(), docx);
 
-    await wf.openRead()
+    final wf = File(docx);
+    await wf
+        .openRead()
         .transform(DocxDecoder(wf.lengthSync()))
         .transform(utf8.encoder)
-        .pipe(File('$f.txt').openWrite());
+        .pipe(File('$docx.txt').openWrite());
   }
 }
