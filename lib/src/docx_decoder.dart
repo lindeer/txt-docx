@@ -45,7 +45,8 @@ final class DocxDecoder extends StreamTransformerBase<List<int>, String> {
           }
         } else if (e is xml.XmlTextEvent) {
           if (save) {
-            final v = e.value.trim();
+            /// [e.value] should not be trimmed! In case it ends with spaces.
+            final v = e.value;
             if (v.isNotEmpty) {
               yield v;
             }
