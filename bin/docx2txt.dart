@@ -1,15 +1,11 @@
 import 'dart:convert' show utf8;
-import 'dart:io' show File, stdout;
+import 'dart:io' show stdout;
 
-import 'package:txt_docx/txt_docx.dart' show DocxDecoder;
+import 'package:txt_docx/src/docx_decoder.dart';
 
 void main(List<String> argv) async {
+  final decoder = DocxDecoder();
   for (final f in argv) {
-    final file = File(f);
-    await file
-        .openRead()
-        .transform(DocxDecoder(file.lengthSync()))
-        .transform(utf8.encoder)
-        .pipe(stdout);
+    await decoder.stream(f).transform(utf8.encoder).pipe(stdout);
   }
 }

@@ -1,15 +1,6 @@
-import 'package:archive/archive.dart'
-    show Archive, ArchiveFile, InputFileStream;
+import 'dart:convert' show utf8;
 
-extension _ArchiveExt on Archive {
-  void addStringFile(String filename, String doc) {
-    add(ArchiveFile(
-      filename,
-      doc.length,
-      doc.codeUnits,
-    ));
-  }
-}
+import 'package:zip2/zip2.dart' show ZipArchive, ZipFileEntry;
 
 const _contentTypeXml = """
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -64,14 +55,21 @@ const _fontTableXml = """
 </w:fonts>
 """;
 
-Archive createDocxArchive(String docFile) {
-  final archive = Archive();
-  archive.addStringFile('[Content_Types].xml', _contentTypeXml);
-  archive.addStringFile('_rels/.rels', _relsXml);
-  archive.addStringFile('word/_rels/document.xml.rels', _documentRelsXml);
-  archive.addStringFile('word/styles.xml', _stylesXml);
-  archive.addStringFile('word/fontTable.xml', _fontTableXml);
-  final input = InputFileStream(docFile);
-  archive.addFile(ArchiveFile.stream('word/document.xml', input));
-  return archive;
+ZipArchive createDocxArchive(Stream<List<int>> xml) {
+  return ZipArchive([
+    _makeEntry('[Content_Types].xml', _contentTypeXml),
+    _makeEntry('_rels/.rels', _relsXml),
+    _makeEntry('word/_rels/document.xml.rels', _documentRelsXml),
+    _makeEntry('word/styles.xml', _stylesXml),
+    _makeEntry('word/fontTable.xml', _fontTableXml),
+    ZipFileEntry(name: 'word/document.xml', data: xml),
+  ]);
+}
+
+ZipFileEntry _makeEntry(String name, String content) {
+  return ZipFileEntry(name: name, data: Stream.value(utf8.encode(content)));
+}
+
+extension ZipArchiveExt on ZipArchive {
+  ZipFileEntry get doc => this['word/document.xml']!;
 }

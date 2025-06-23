@@ -16,12 +16,12 @@ void main() {
   test('basic read and write', () async {
     final lines = _sample.split('\n');
     final docx = 'tmp.docx';
-    final writer = DocxWriter();
-    await writer.writeLines(lines, docx);
+    await Stream.fromIterable(lines)
+        .transform(DocxEncoder())
+        .pipe(File(docx).openWrite());
 
     final rf = File(docx);
-    final decoder = DocxDecoder(rf.lengthSync());
-    final text = await rf.openRead().transform(decoder).join('');
+    final text = await DocxDecoder().open(rf.openSync()).join('');
     expect(text, '$_sample\n');
     rf.deleteSync();
   });
