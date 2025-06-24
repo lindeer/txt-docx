@@ -1,6 +1,6 @@
 import 'dart:async' show StreamTransformerBase;
 import 'dart:convert' show utf8;
-import 'dart:io' show File, RandomAccessFile;
+import 'dart:io' show File, RandomAccessFile, stderr;
 
 import 'package:xml/xml_events.dart' as xml;
 import 'package:zip2/zip2.dart' show zip;
@@ -38,6 +38,7 @@ final class _DocxXmlDecoder extends StreamTransformerBase<String, String> {
       final t4 = DateTime.now().millisecondsSinceEpoch;
       _log('docx_reader: stream transformed, ${t4 - t3} ms.');
       var save = false;
+      final buf = StringBuffer();
       await for (final e in events) {
         if (e is xml.XmlStartElementEvent) {
           if (e.name == 'w:t') {
@@ -47,16 +48,29 @@ final class _DocxXmlDecoder extends StreamTransformerBase<String, String> {
           if (save) {
             /// [e.value] should not be trimmed! In case it ends with spaces.
             final v = e.value;
-            if (v.isNotEmpty) {
-              yield v;
-            }
+
+            /// text may be truncated, so we buffered it. e.g. '&quot;' was
+            /// split into '&q' and 'uot;'
+            buf.write(v);
           }
         } else if (e is xml.XmlEndElementEvent) {
           if (e.name == 'w:t') {
-            yield '\n';
+            buf.writeln();
+            final str = buf
+                .toString()
+                .replaceAll('&amp;', '&')
+                .replaceAll('&lt;', '<')
+                .replaceAll('&gt;', '>')
+                .replaceAll('&quot;', '"')
+                .replaceAll('&apos;', "'");
+            buf.clear();
+            yield str;
             save = false;
           }
         }
+      }
+      if (buf.isNotEmpty) {
+        yield buf.toString();
       }
       final t5 = DateTime.now().millisecondsSinceEpoch;
       _log('docx_reader: handle events done, ${t5 - t4} ms.');
@@ -65,7 +79,7 @@ final class _DocxXmlDecoder extends StreamTransformerBase<String, String> {
 
   void _log(String msg) {
     if (verbose) {
-      print('\x1B[32m$msg\x1B[0m');
+      stderr.writeln('\x1B[32m$msg\x1B[0m');
     }
   }
 }
