@@ -1,5 +1,5 @@
 import 'dart:async' show StreamTransformerBase;
-import 'dart:convert' show utf8;
+import 'dart:convert' show LineSplitter, utf8;
 
 import 'package:zip2/zip2.dart' show zip;
 
@@ -10,7 +10,10 @@ final class DocxEncoder extends StreamTransformerBase<String, List<int>> {
 
   @override
   Stream<List<int>> bind(Stream<String> stream) {
-    final wordDoc = stream.transform(_DocxXmlEncoder()).transform(utf8.encoder);
+    final wordDoc = stream
+        .transform(LineSplitter())
+        .transform(_DocxXmlEncoder())
+        .transform(utf8.encoder);
     final archive = c.createDocxArchive(wordDoc);
     return zip.encoder.zip(archive);
   }

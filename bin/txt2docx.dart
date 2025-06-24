@@ -1,4 +1,4 @@
-import 'dart:convert' show LineSplitter, utf8;
+import 'dart:convert' show utf8;
 import 'dart:io' show File;
 
 import 'package:path/path.dart' as p;
@@ -10,7 +10,6 @@ void main(List<String> argv) async {
     return File(f)
         .openRead()
         .transform(utf8.decoder)
-        .transform(LineSplitter())
         .transform(DocxEncoder())
         .pipe(File(docx).openWrite());
   });

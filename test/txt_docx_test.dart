@@ -14,15 +14,14 @@ This is paragraph number 0, demonstrating handling of many paragraphs.
 """;
 void main() {
   test('basic read and write', () async {
-    final lines = _sample.split('\n');
     final docx = 'tmp.docx';
-    await Stream.fromIterable(lines)
+    await Stream.value(_sample)
         .transform(DocxEncoder())
         .pipe(File(docx).openWrite());
 
     final rf = File(docx);
     final text = await DocxDecoder().open(rf.openSync()).join('');
-    expect(text, '$_sample\n');
+    expect(text, _sample);
     rf.deleteSync();
   });
 }

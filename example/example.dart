@@ -11,7 +11,6 @@ void main(List<String> argv) async {
     await File(f)
         .openRead()
         .transform(utf8.decoder)
-        .transform(LineSplitter())
         .transform(DocxEncoder())
         .pipe(File(docx).openWrite());
 
