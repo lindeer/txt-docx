@@ -1,3 +1,9 @@
+## 2.0.0
+
+- Breaking Change: replace archive with zip2.
+- Fix text truncation error.
+- Do line splitting innerly.
+
 ## 1.0.0
 
 - DocxDecoder based on Stream and transformer.
