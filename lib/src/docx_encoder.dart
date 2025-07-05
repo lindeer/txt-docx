@@ -5,6 +5,11 @@ import 'package:zip2/zip2.dart' show zip;
 
 import 'docx_const.dart' as c;
 
+/// A transformer class that could convert a text stream into a docx stream.
+/// It receive a raw text stream, splitting lines innerly and assembling xml
+/// nodes as text, then encode them into binary stream.
+/// This binary stream is used to construct a zip archive, and at this time
+/// generate zip stream with [zip] from [zip2](https://pub.dev/packages/zip2).
 final class DocxEncoder extends StreamTransformerBase<String, List<int>> {
   const DocxEncoder();
 
@@ -19,6 +24,9 @@ final class DocxEncoder extends StreamTransformerBase<String, List<int>> {
   }
 }
 
+/// A transformer that convert raw text lines to the main xml file content.
+/// Only consider raw text content without any style, and one line as one docx
+/// paragraph.
 final class _DocxXmlEncoder extends StreamTransformerBase<String, String> {
   const _DocxXmlEncoder();
 

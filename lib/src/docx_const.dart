@@ -55,6 +55,8 @@ const _fontTableXml = """
 </w:fonts>
 """;
 
+/// A utility function that bind the document xml stream to a [ZipArchive], a
+/// docx file is just a zip file.
 ZipArchive createDocxArchive(Stream<List<int>> xml) {
   return ZipArchive([
     _makeEntry('[Content_Types].xml', _contentTypeXml),
@@ -70,6 +72,9 @@ ZipFileEntry _makeEntry(String name, String content) {
   return ZipFileEntry(name: name, data: Stream.value(utf8.encode(content)));
 }
 
+/// A utility extension that get document entry directly from a `ZipArchive`.
+/// It would be invalid docx file if its entries do not contain
+/// `word/document.xml`.
 extension ZipArchiveExt on ZipArchive {
   ZipFileEntry get doc => this['word/document.xml']!;
 }

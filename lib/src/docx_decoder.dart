@@ -7,13 +7,19 @@ import 'package:zip2/zip2.dart' show zip;
 
 import 'docx_const.dart' as c;
 
+/// A standalone class that convert a [RandomAccessFile] file to a xml stream,
+/// which is the main content of the given docx file.
+/// A zip file is totally designed for [RandomAccessFile], so it could not be
+/// implemented as a stream transformer.
 final class DocxDecoder {
   final bool verbose;
 
   const DocxDecoder({this.verbose = false});
 
+  /// Get the document stream with the given [file] path.
   Stream<String> stream(String file) => open(File(file).openSync());
 
+  /// Get the document stream with the given [RandomAccessFile] object.
   Stream<String> open(RandomAccessFile file) {
     final archive = zip.decoder.unzip(file);
     return archive.doc.data
@@ -23,6 +29,8 @@ final class DocxDecoder {
 }
 
 /// A transformer that convert docx xml file content to raw text lines.
+/// It is implemented by xml events instead of xml parser, consideration for
+/// super large files.
 final class _DocxXmlDecoder extends StreamTransformerBase<String, String> {
   final bool verbose;
 
